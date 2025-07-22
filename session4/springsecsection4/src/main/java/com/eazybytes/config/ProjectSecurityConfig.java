@@ -4,15 +4,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.password.CompromisedPasswordChecker;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.password.HaveIBeenPwnedRestApiPasswordChecker;
-
 
 import static org.springframework.security.config.Customizer.withDefaults;
 
@@ -28,30 +23,36 @@ public class ProjectSecurityConfig {
         http.authorizeHttpRequests((requests) -> requests.anyRequest().denyAll());
 */
 
-        http.authorizeHttpRequests((requests) -> requests.
+        http.csrf(httpSecurityCsrfConfigurer ->
+                httpSecurityCsrfConfigurer.disable()).
+                authorizeHttpRequests((requests) -> requests.
                         requestMatchers("/myAccount","/myBalance","/myLoans","/myCards").authenticated().
-                        requestMatchers("/notices","/contact","/error").permitAll());
+                        requestMatchers("/notices","/contact","/error","/register").permitAll());
 
         http.formLogin(withDefaults());
         http.httpBasic(withDefaults());
+
         return http.build();
     }
 
-    @Bean
-    public UserDetailsService userDetailsService() {
-        UserDetails user = User.withUsername("user")
-                .password("{bcrypt}$2a$12$xIOX3LereF.s2CeM5.C5UO21YzZSw9vC5W7MwN5zW5lzZicOzrBdm") // 注意 {noop} 前綴
-                .authorities("read")
-                .build();
+/*    @Bean
+    public UserDetailsService userDetailsService(DataSource dataSource) {
+//        UserDetails user = User.withUsername("user")
+//                .password("{bcrypt}$2a$12$xIOX3LereF.s2CeM5.C5UO21YzZSw9vC5W7MwN5zW5lzZicOzrBdm") // 注意 {noop} 前綴
+//                .authorities("read")
+//                .build();
+//
+//        UserDetails admin = User.withUsername("admin")
+//                .password("{noop}EazyBytes@54321") // 注意 {noop} 前綴
+//                .authorities("admin")
+//                .build();
+//
+//        // 將所有使用者傳入建構子
+//        return new InMemoryUserDetailsManager(user, admin);
 
-        UserDetails admin = User.withUsername("admin")
-                .password("{noop}EazyBytes@54321") // 注意 {noop} 前綴
-                .authorities("admin")
-                .build();
+        return new JdbcUserDetailsManager(dataSource);
 
-        // 將所有使用者傳入建構子
-        return new InMemoryUserDetailsManager(user, admin);
-    }
+    }*/
 
 
     @Bean
